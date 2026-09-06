@@ -4,7 +4,6 @@ on:
   push:
     branches: [main]
     paths:
-      - bootstrap.b64
       - .github/workflows/bootstrap.yml
 
 permissions:
@@ -17,11 +16,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - name: Expand repository payload
         run: |
-          base64 -d bootstrap.b64 > source.zip
+          cat bootstrap.part* > all.b64
+          base64 -d all.b64 > source.zip
           unzip -o source.zip
-          rm bootstrap.b64 source.zip .github/workflows/bootstrap.yml
+          rm -f all.b64 source.zip bootstrap.b64 bootstrap.part*
+          rm -f .github/workflows/bootstrap.yml
+
       - name: Commit expanded repository
         run: |
           git config user.name "github-actions[bot]"
