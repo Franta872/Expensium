@@ -1,0 +1,31 @@
+name: Bootstrap repository
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - bootstrap.b64
+      - .github/workflows/bootstrap.yml
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Expand repository payload
+        run: |
+          base64 -d bootstrap.b64 > source.zip
+          unzip -o source.zip
+          rm bootstrap.b64 source.zip .github/workflows/bootstrap.yml
+      - name: Commit expanded repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Publish Expensium source and GitHub automation"
+          git push
