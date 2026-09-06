@@ -1,0 +1,31 @@
+name: GitHub release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Validate
+        run: |
+          node tests/validate.mjs
+          npx --yes web-ext lint --source-dir extension
+      - name: Build archive and checksum
+        run: |
+          python3 scripts/package.py
+          cd dist
+          sha256sum *.zip > SHA256SUMS.txt
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/*.zip dist/SHA256SUMS.txt --generate-notes --title "Expensium $GITHUB_REF_NAME"

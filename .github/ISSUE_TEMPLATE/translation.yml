@@ -1,0 +1,29 @@
+name: Translation / wordmark improvement
+description: Suggest a better localized Expensium pun.
+title: "[Translation]: "
+labels: ["translation"]
+body:
+  - type: input
+    id: language
+    attributes:
+      label: Language
+      placeholder: "e.g. Czech (cs)"
+    validations:
+      required: true
+  - type: input
+    id: current
+    attributes:
+      label: Current wordmark
+  - type: input
+    id: proposed
+    attributes:
+      label: Proposed wordmark
+    validations:
+      required: true
+  - type: textarea
+    id: reason
+    attributes:
+      label: Why is this better?
+      description: Native-speaker context is especially useful.
+    validations:
+      required: true

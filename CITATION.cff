@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use Expensium in research on browser customization, you can cite this repository."
+title: "Expensium"
+type: software
+authors:
+  - family-names: "Franta872"
+version: 1.0.0
+date-released: 2026-09-06
+repository-code: "https://github.com/Franta872/Expensium"
+license: MIT
+keywords:
+  - firefox
+  - webextension
+  - youtube
+  - browser-extension
+  - vibe-coding

@@ -1,0 +1,30 @@
+name: Validate & package
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Repository checks
+        run: node tests/validate.mjs
+      - name: Mozilla web-ext lint
+        run: npx --yes web-ext lint --source-dir extension
+      - name: Package unsigned extension
+        run: python3 scripts/package.py
+      - uses: actions/upload-artifact@v7
+        with:
+          name: expensium-unsigned
+          path: dist/*.zip
+          if-no-files-found: error

@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Expensium</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <header>
+      <img src="icons/icon.svg" alt="">
+      <div><strong>Expensium</strong><small id="variant">Expensium</small></div>
+      <button id="toggle" class="toggle" type="button" role="switch" aria-checked="true"><span></span></button>
+    </header>
+    <label class="search"><b>⌕</b><input id="q" type="search" autocomplete="off" spellcheck="false"><kbd>/</kbd></label>
+    <div id="list" role="listbox" tabindex="0"></div>
+    <footer><span id="count"></span><span title="Local only">🔒</span></footer>
+  </main>
+  <script src="languages.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

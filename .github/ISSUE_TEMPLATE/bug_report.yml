@@ -1,0 +1,33 @@
+name: Bug report
+description: Something is broken on YouTube or in the popup.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: input
+    id: firefox
+    attributes:
+      label: Firefox version
+      placeholder: "e.g. 155.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: logo
+    attributes:
+      label: Logo type
+      options:
+        - Standard YouTube logo
+        - YouTube Premium logo
+        - Both / not sure
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Include screenshots and console errors if useful.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
