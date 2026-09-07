@@ -2,7 +2,8 @@ name: GitHub release
 
 on:
   push:
-    tags: ["v*"]
+    tags:
+      - "v*"
 
 permissions:
   contents: write
@@ -10,20 +11,28 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
           node-version: 24
+
       - name: Validate
         run: |
           node tests/validate.mjs
+          node tests/core.mjs
           npx --yes web-ext lint --source-dir extension
-      - name: Build archive and checksum
+
+      - name: Build archive
+        run: python3 scripts/package.py
+
+      - name: Add SHA-256 checksum
         run: |
-          python3 scripts/package.py
           cd dist
           sha256sum *.zip > SHA256SUMS.txt
+
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}

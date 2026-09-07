@@ -1,16 +1,25 @@
 # Changelog
 
+## 1.1.0 - 2026-09-07
+
+- Added separate Standard and Premium wordmark families.
+- Added automatic Standard/Premium detection.
+- Added manual Auto / Standard / Premium override.
+- Czech: **Reklamium** / **Drahium**.
+- English: **Adium** / **Expensium**.
+- Added both wordmark families to all 137 languages.
+- Reworked wordmark sizing with per-script optical profiles.
+- Long words now compress horizontally instead of becoming uniformly tiny.
+- Added shared `core.js` logic and unit tests for detection and overrides.
+
 ## 1.0.0 - 2026-09-06
 
-First public release candidate under the **Expensium** name.
-
-- Standard YouTube and YouTube Premium logo support.
-- Dynamic SVG bounding-box layout instead of hard-coded Premium dimensions.
-- 137 playful localized wordmarks.
-- Automatic language detection and searchable popup.
-- RTL support and keyboard navigation.
-- Exact original-wordmark restore when disabled.
-- No network access or runtime AI.
-- Explicit 100% vibe-coding / OpenAI ChatGPT provenance.
-- AMO data-collection declaration set to `none`.
-- GitHub Actions, CodeQL, Dependabot, issue forms, CODEOWNERS and automated releases.
+- First public candidate.
+- Standard and Premium masthead support.
+- 137 localized wordmarks.
+- Automatic language detection.
+- Searchable popup with RTL support.
+- Enable/disable switch.
+- No analytics, telemetry, remote code or network requests.
+- Explicit vibe-coding/AI provenance.
+- GitHub Actions, CodeQL, Dependabot and release automation.

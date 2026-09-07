@@ -1,14 +1,21 @@
 # Privacy Policy
 
-Expensium does not collect, transmit, sell, share or remotely store user data.
+Expensium does not collect, transmit, sell, share, or remotely store user data.
 
-The extension stores only two preferences locally in Firefox using `browser.storage.local`:
+The extension stores only three preferences locally in Firefox using
+`browser.storage.local`:
 
 - whether Expensium is enabled;
-- the selected wordmark language.
+- the selected wordmark language;
+- the selected logo mode (`auto`, `standard`, or `premium`).
 
-Expensium has no analytics, telemetry, advertising, tracking, remote code, accounts, network API, remote fonts or AI service calls.
+These preferences are not transmitted by Expensium.
 
-The content script runs on YouTube pages solely to modify the visible masthead wordmark. It does not read or transmit video history, account data, search history, comments, messages, cookies, credentials or playback information.
+Expensium has no analytics, telemetry, advertising, tracking, remote code,
+accounts, network API, remote fonts, or AI service calls.
 
-Last updated: 2026-09-06
+The extension runs on YouTube pages solely to modify the visible masthead
+wordmark. It does not read or transmit video history, account data, search
+history, comments, messages, cookies, credentials, or playback information.
+
+Last updated: 2026-09-07

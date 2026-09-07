@@ -8,16 +8,40 @@
 </head>
 <body>
   <main>
-    <header>
-      <img src="icons/icon.svg" alt="">
-      <div><strong>Expensium</strong><small id="variant">Expensium</small></div>
-      <button id="toggle" class="toggle" type="button" role="switch" aria-checked="true"><span></span></button>
+    <header class="top">
+      <img src="icons/icon.svg" class="logo" alt="">
+      <div class="brand">
+        <strong>Expensium</strong>
+        <span id="variant">Adium / Expensium</span>
+      </div>
+      <button id="toggle" class="toggle" type="button" role="switch" aria-checked="true">
+        <span class="toggleKnob"></span>
+      </button>
     </header>
-    <label class="search"><b>⌕</b><input id="q" type="search" autocomplete="off" spellcheck="false"><kbd>/</kbd></label>
-    <div id="list" role="listbox" tabindex="0"></div>
-    <footer><span id="count"></span><span title="Local only">🔒</span></footer>
+
+    <div class="modeRow" role="radiogroup">
+      <button type="button" data-mode="auto" class="modeButton selected">Auto</button>
+      <button type="button" data-mode="standard" class="modeButton">Standard</button>
+      <button type="button" data-mode="premium" class="modeButton">Premium</button>
+    </div>
+
+    <div class="searchRow">
+      <span aria-hidden="true">⌕</span>
+      <input id="search" type="search" autocomplete="off" spellcheck="false">
+      <kbd>/</kbd>
+    </div>
+
+    <div id="list" class="list" role="listbox" tabindex="0"></div>
+
+    <footer>
+      <span id="count"></span>
+      <span title="Local only">🔒</span>
+    </footer>
   </main>
+
   <script src="languages.js"></script>
+  <script src="core.js"></script>
+  <script src="ui.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

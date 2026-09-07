@@ -1,54 +1,258 @@
 (() => {
   "use strict";
-  const BY_CODE = new Map(EXPENSIUM_LANGUAGES.map(x => [x.code,x]));
-  const UI = {
-    en:["Search languages","Automatic","Enabled","Disabled"], cs:["Hledat jazyky","Automaticky","Zapnuto","Vypnuto"],
-    de:["Sprachen suchen","Automatisch","Aktiviert","Deaktiviert"], pl:["Szukaj języków","Automatycznie","Włączone","Wyłączone"],
-    fr:["Rechercher des langues","Automatique","Activé","Désactivé"], es:["Buscar idiomas","Automático","Activado","Desactivado"],
-    it:["Cerca lingue","Automatico","Attivato","Disattivato"], ru:["Поиск языков","Автоматически","Включено","Выключено"],
-    ar:["البحث عن اللغات","تلقائي","مفعّل","معطّل"], ja:["言語を検索","自動","オン","オフ"], ko:["언어 검색","자동","켜짐","꺼짐"],
-    "zh-Hans":["搜索语言","自动","已启用","已禁用"], "zh-Hant":["搜尋語言","自動","已啟用","已停用"]
-  };
-  const q = document.querySelector("#q"), list = document.querySelector("#list"), variant = document.querySelector("#variant"), toggle = document.querySelector("#toggle"), count = document.querySelector("#count");
-  let enabled = true, language = "en", filter = "";
 
-  function locale(value) {
-    const raw = String(value || "en").replace("_","-");
-    if (/^zh-(TW|HK|MO|Hant)/i.test(raw)) return "zh-Hant";
-    if (/^zh/i.test(raw)) return "zh-Hans";
-    if (BY_CODE.has(raw)) return raw;
-    const p = raw.split("-")[0].toLowerCase();
-    return BY_CODE.has(p) ? p : "en";
-  }
-  function current() { return language === "auto" ? locale(navigator.language) : locale(language); }
-  function strings() { return UI[current()] || UI[current().split("-")[0]] || UI.en; }
-  function names() { try { return new Intl.DisplayNames([current()],{type:"language"}); } catch (_) { return null; } }
-  function langName(code,dn) { try { return dn?.of(code) || code; } catch (_) { return code; } }
+  const api = globalThis.browser;
+  const C = EXPENSIUM_CORE;
+  const BY_CODE = new Map(EXPENSIUM_LANGUAGES.map((item) => [item.code, item]));
 
-  function row(item,name,selected) {
-    const b = document.createElement("button");
-    b.className = "language" + (selected ? " selected" : ""); b.type="button"; b.dir=item.dir; b.dataset.code=item.code;
-    b.innerHTML = `<span class="code"></span><span class="names"><span class="name"></span><span class="sub"></span></span><span class="word"></span>`;
-    b.querySelector(".code").textContent=item.code.toUpperCase().replace("ZH-",""); b.querySelector(".name").textContent=name; b.querySelector(".sub").textContent=item.code; b.querySelector(".word").textContent=item.word;
-    b.onclick = async () => { language=item.code; filter=""; q.value=""; await browser.storage.local.set({language}); render(); };
-    return b;
+  const search = document.getElementById("search");
+  const list = document.getElementById("list");
+  const variant = document.getElementById("variant");
+  const toggle = document.getElementById("toggle");
+  const count = document.getElementById("count");
+  const modeButtons = [...document.querySelectorAll(".modeButton")];
+
+  let enabled = true;
+  let language = "en";
+  let logoMode = "auto";
+  let filter = "";
+
+  function normalizeLocale(locale) {
+    return C.normalizeLocale(locale, BY_CODE);
   }
 
-  function autoRow(dn) {
-    const item=BY_CODE.get(current())||BY_CODE.get("en"), b=row({code:"🌐",word:item.word,dir:item.dir},strings()[1],language==="auto");
-    b.querySelector(".sub").textContent=langName(item.code,dn); b.onclick=async()=>{language="auto";filter="";q.value="";await browser.storage.local.set({language});render();}; return b;
+  function effectiveLocale() {
+    return language !== "auto"
+      ? normalizeLocale(language)
+      : normalizeLocale(navigator.language || "en");
+  }
+
+  function strings() {
+    const locale = effectiveLocale();
+    return EXPENSIUM_UI[locale] ||
+           EXPENSIUM_UI[locale.split("-")[0]] ||
+           EXPENSIUM_UI.en;
+  }
+
+  function displayNames(locale) {
+    try {
+      return new Intl.DisplayNames([locale], { type: "language" });
+    } catch (_) {
+      try {
+        return new Intl.DisplayNames(["en"], { type: "language" });
+      } catch (_) {
+        return null;
+      }
+    }
+  }
+
+  function localizedName(item, dn) {
+    if (!dn) return item.native;
+    try {
+      return dn.of(item.code) || item.native;
+    } catch (_) {
+      return item.native;
+    }
+  }
+
+  function previewWord(item) {
+    if (logoMode === "standard") return item.standardWord;
+    if (logoMode === "premium") return item.premiumWord;
+    return `${item.standardWord} / ${item.premiumWord}`;
+  }
+
+  function applyLocale() {
+    const locale = effectiveLocale();
+    const item = BY_CODE.get(locale) || BY_CODE.get("en");
+    const s = strings();
+
+    document.documentElement.lang = locale;
+    document.documentElement.dir = item.dir || "ltr";
+
+    variant.textContent = previewWord(item);
+    toggle.setAttribute("aria-checked", String(enabled));
+    toggle.setAttribute("aria-label", enabled ? s.enabled : s.disabled);
+    toggle.title = enabled ? s.enabled : s.disabled;
+    search.placeholder = s.search;
+    search.setAttribute("aria-label", s.search);
+
+    const labels = {
+      auto: s.modeAuto,
+      standard: s.modeStandard,
+      premium: s.modePremium
+    };
+
+    for (const button of modeButtons) {
+      button.textContent = labels[button.dataset.mode];
+      const selected = button.dataset.mode === logoMode;
+      button.classList.toggle("selected", selected);
+      button.setAttribute("aria-checked", String(selected));
+    }
+
+    render();
+  }
+
+  function buildLanguageRow(item, localized, selected) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "language" + (selected ? " selected" : "");
+    button.dataset.code = item.code;
+    button.setAttribute("role", "option");
+    button.setAttribute("aria-selected", String(selected));
+    button.dir = item.dir || "ltr";
+
+    const code = document.createElement("span");
+    code.className = "code";
+    code.textContent = item.code.toUpperCase().replace("ZH-", "");
+
+    const names = document.createElement("span");
+    names.className = "names";
+
+    const primary = document.createElement("span");
+    primary.className = "primary";
+    primary.textContent = localized;
+
+    const secondary = document.createElement("span");
+    secondary.className = "secondary";
+    secondary.textContent =
+      localized.toLocaleLowerCase(effectiveLocale()) ===
+      item.native.toLocaleLowerCase(effectiveLocale())
+        ? item.code
+        : `${item.native} · ${item.code}`;
+
+    const word = document.createElement("span");
+    word.className = "word";
+    word.textContent = previewWord(item);
+
+    names.append(primary, secondary);
+    button.append(code, names, word);
+
+    button.addEventListener("click", async () => {
+      language = item.code;
+      filter = "";
+      search.value = "";
+      await api.storage.local.set({ language });
+      applyLocale();
+    });
+
+    return button;
+  }
+
+  function buildAutoRow(dn) {
+    const s = strings();
+    const effective = BY_CODE.get(effectiveLocale()) || BY_CODE.get("en");
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "language" + (language === "auto" ? " selected" : "");
+    button.setAttribute("role", "option");
+    button.setAttribute("aria-selected", String(language === "auto"));
+
+    const code = document.createElement("span");
+    code.className = "code";
+    code.textContent = "🌐";
+
+    const names = document.createElement("span");
+    names.className = "names";
+
+    const primary = document.createElement("span");
+    primary.className = "primary";
+    primary.textContent = s.auto;
+
+    const secondary = document.createElement("span");
+    secondary.className = "secondary";
+    secondary.textContent = localizedName(effective, dn);
+
+    const word = document.createElement("span");
+    word.className = "word";
+    word.textContent = previewWord(effective);
+
+    names.append(primary, secondary);
+    button.append(code, names, word);
+
+    button.addEventListener("click", async () => {
+      language = "auto";
+      filter = "";
+      search.value = "";
+      await api.storage.local.set({ language });
+      applyLocale();
+    });
+
+    return button;
   }
 
   function render() {
-    const loc=current(), item=BY_CODE.get(loc)||BY_CODE.get("en"), s=strings(), dn=names(), needle=filter.trim().toLocaleLowerCase(loc);
-    document.documentElement.lang=loc; document.documentElement.dir=item.dir; variant.textContent=item.word; q.placeholder=s[0];
-    toggle.setAttribute("aria-checked",String(enabled)); toggle.title=enabled?s[2]:s[3];
-    const rows=EXPENSIUM_LANGUAGES.map(x=>[x,langName(x.code,dn)]).filter(([x,n])=>!needle||`${x.code} ${x.word} ${n}`.toLocaleLowerCase(loc).includes(needle)).sort((a,b)=>new Intl.Collator(loc,{sensitivity:"base"}).compare(a[1],b[1]));
-    list.replaceChildren(); if(!needle) list.append(autoRow(dn)); for(const [x,n] of rows) list.append(row(x,n,language===x.code));
-    count.textContent=`🌐 ${new Intl.NumberFormat(loc).format(EXPENSIUM_LANGUAGES.length)}`;
+    const locale = effectiveLocale();
+    const dn = displayNames(locale);
+    const collator = new Intl.Collator(locale, { sensitivity: "base" });
+    const q = filter.trim().toLocaleLowerCase(locale);
+
+    const rows = EXPENSIUM_LANGUAGES
+      .map((item) => ({ item, localized: localizedName(item, dn) }))
+      .filter(({ item, localized }) => {
+        if (!q) return true;
+        return [
+          item.code, item.native, item.standardWord, item.premiumWord, localized
+        ].join(" ").toLocaleLowerCase(locale).includes(q);
+      })
+      .sort((a, b) => collator.compare(a.localized, b.localized));
+
+    list.replaceChildren();
+    if (!q) list.appendChild(buildAutoRow(dn));
+
+    for (const row of rows) {
+      list.appendChild(
+        buildLanguageRow(row.item, row.localized, language === row.item.code)
+      );
+    }
+
+    count.textContent =
+      `🌐 ${new Intl.NumberFormat(locale).format(EXPENSIUM_LANGUAGES.length)}`;
   }
 
-  toggle.onclick=async()=>{enabled=!enabled;await browser.storage.local.set({enabled});render();}; q.oninput=()=>{filter=q.value;render();};
-  document.addEventListener("keydown",e=>{if(e.key==="/"&&document.activeElement!==q){e.preventDefault();q.focus();return;}if(e.key==="Escape"&&q.value){q.value="";filter="";render();return;}const rows=[...list.querySelectorAll(".language")];const i=rows.indexOf(document.activeElement);if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();rows[Math.max(0,Math.min(rows.length-1,(i<0?0:i)+(e.key==="ArrowDown"?1:-1)))]?.focus();}});
-  browser.storage.local.get(["enabled","language"]).then(s=>{enabled=s.enabled!==false;language=s.language||"en";render();});
+  toggle.addEventListener("click", async () => {
+    enabled = !enabled;
+    await api.storage.local.set({ enabled });
+    applyLocale();
+  });
+
+  for (const button of modeButtons) {
+    button.addEventListener("click", async () => {
+      logoMode = button.dataset.mode;
+      await api.storage.local.set({ logoMode });
+      applyLocale();
+    });
+  }
+
+  search.addEventListener("input", () => {
+    filter = search.value;
+    render();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "/" && document.activeElement !== search) {
+      event.preventDefault();
+      search.focus();
+    } else if (event.key === "Escape" && search.value) {
+      search.value = "";
+      filter = "";
+      render();
+    }
+  });
+
+  async function init() {
+    const result = await api.storage.local.get([
+      "enabled", "language", "logoMode"
+    ]);
+
+    enabled = result.enabled !== false;
+    language = result.language || "en";
+    logoMode = ["auto", "standard", "premium"].includes(result.logoMode)
+      ? result.logoMode
+      : "auto";
+
+    applyLocale();
+  }
+
+  init();
 })();

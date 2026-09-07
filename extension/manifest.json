@@ -1,14 +1,21 @@
 {
   "manifest_version": 3,
   "name": "Expensium",
-  "version": "1.0.0",
-  "description": "Playfully replaces the standard YouTube or YouTube Premium wordmark with Expensium or a localized variant.",
+  "version": "1.1.0",
+  "description": "Renames standard YouTube with an ad-themed wordmark and YouTube Premium with an expensive-themed wordmark.",
   "author": "Franta872",
-  "permissions": ["storage"],
+  "permissions": [
+    "storage"
+  ],
   "action": {
     "default_title": "Expensium",
     "default_popup": "popup.html",
-    "default_icon": "icons/icon.svg"
+    "default_icon": {
+      "16": "icons/icon.svg",
+      "32": "icons/icon.svg",
+      "48": "icons/icon.svg",
+      "96": "icons/icon.svg"
+    }
   },
   "icons": {
     "16": "icons/icon.svg",
@@ -17,16 +24,29 @@
     "96": "icons/icon.svg",
     "128": "icons/icon.svg"
   },
-  "content_scripts": [{
-    "matches": ["https://www.youtube.com/*", "https://youtube.com/*"],
-    "js": ["languages.js", "content.js"],
-    "run_at": "document_start"
-  }],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/*",
+        "https://youtube.com/*"
+      ],
+      "js": [
+        "languages.js",
+        "core.js",
+        "content.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
   "browser_specific_settings": {
     "gecko": {
       "id": "{b2fa910b-4d34-4c9d-9c32-268e7131e52a}",
       "strict_min_version": "128.0",
-      "data_collection_permissions": {"required": ["none"]}
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
     }
   }
 }
